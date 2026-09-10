@@ -1,4 +1,6 @@
+using System;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class BulletSpawner : MonoBehaviour
 {
@@ -7,8 +9,12 @@ public class BulletSpawner : MonoBehaviour
     [SerializeField] private float spawnInterval = 0.5f;  // 스폰 주기
 
     private float timer = 0f;
-    private float spawnDistanceX = 10f;
-    private float spawnDistanceY = 6f;
+    private Camera mainCam;
+
+    private void Awake()
+    {
+        mainCam = Camera.main;
+    }
 
     void Update()
     {
@@ -22,30 +28,39 @@ public class BulletSpawner : MonoBehaviour
 
     void spawnBullet()
     {
-        if (playerTransform == null) return;
+        if (playerTransform == null || mainCam == null) return;
+        
+        float camHeight = mainCam.orthographicSize;
+        float camWidth = camHeight * mainCam.aspect;
+
+        float padding = 1f;
+        float spawnX = camWidth + padding;
+        float spawnY = camHeight + padding;
+        
         Vector3 spawnPosition = Vector3.zero;
+        
         int side = Random.Range(0, 4);
 
         switch (side)
         {
             case 0:
-                spawnPosition = new Vector3(Random.Range(-spawnDistanceX, spawnDistanceX),spawnDistanceY, 0);
+                spawnPosition = new Vector3(Random.Range(-camWidth, camWidth),camHeight, 0);
                 break;
             case 1:
-                spawnPosition = new Vector3(Random.Range(-spawnDistanceX, spawnDistanceX),-spawnDistanceY, 0);
+                spawnPosition = new Vector3(Random.Range(-camWidth, camWidth),-camHeight, 0);
                 break;
             case 2:
-                spawnPosition = new Vector3(-spawnDistanceX, Random.Range(-spawnDistanceY, spawnDistanceY), 0);
+                spawnPosition = new Vector3(-camWidth, Random.Range(-camHeight, camHeight), 0);
                 break;
             case 3:
-                spawnPosition = new Vector3(spawnDistanceX, Random.Range(-spawnDistanceY, spawnDistanceY), 0);
+                spawnPosition = new Vector3(camWidth, Random.Range(-camHeight, camHeight), 0);
                 break;
         }
         
         // 총알 생성
         GameObject newBullet = Instantiate(bulletPrefab, spawnPosition, Quaternion.identity);
-        Vector2 dirctionToPlayer = playerTransform.position - spawnPosition;
-        newBullet.GetComponent<Bullet>().SetDirection(dirctionToPlayer);
+        Vector2 directionToPlayer = playerTransform.position - spawnPosition;
+        newBullet.GetComponent<Bullet>().SetDirection(directionToPlayer);
     }
     
 }
